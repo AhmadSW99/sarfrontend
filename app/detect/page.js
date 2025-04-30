@@ -1,11 +1,23 @@
 "use client";
 
+i"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
-// --- Setup WebSocket connection ---
-const socket = io('https://sar-ks0x.onrender.com'); 
- // Backend URL here (change when deploy)
+// ✅ WebSocket setup with log
+console.log("🔌 Connecting to WebSocket...");
+const socket = io("https://sar-ks0x.onrender.com", {
+  transports: ["websocket"],
+});
+
+socket.on("connect", () => {
+  console.log("✅ Connected to backend WebSocket");
+});
+
+socket.on("connect_error", (err) => {
+  console.error("❌ WebSocket connection failed:", err);
+});
 
 export default function DetectPage() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -15,25 +27,27 @@ export default function DetectPage() {
   const [error, setError] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
-
   useEffect(() => {
-    // When processed image received from backend
-    socket.on('processed_image', (data) => {
+    console.log("📡 Listening for processed_image and error...");
+  
+    socket.on("processed_image", (data) => {
+      console.log("✅ Received processed image from backend");
       setIsLoading(false);
       setProcessedImageUrl(data.image);
     });
-
-    // Handle errors
-    socket.on('error', (err) => {
+  
+    socket.on("error", (err) => {
+      console.error("❌ Error from backend:", err.message || err);
       setIsLoading(false);
       setError(err.message || "Error from server");
     });
-
+  
     return () => {
-      socket.off('processed_image');
-      socket.off('error');
+      socket.off("processed_image");
+      socket.off("error");
     };
   }, []);
+  
 
   const processFile = (file) => {
     const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
@@ -63,9 +77,11 @@ export default function DetectPage() {
   };
 
   const sendImage = (base64Image) => {
+    console.log("📤 Sending image to backend...");
     setIsLoading(true);
-    socket.emit('upload_image', { image: base64Image });
+    socket.emit("upload_image", { image: base64Image });
   };
+  
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
