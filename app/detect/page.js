@@ -1,6 +1,6 @@
 "use client";
 
-i"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
